@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
     samus.move(x_vel, y_vel);
     
     // draw
-    SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0x0 );
+    SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0xFF );
     SDL_RenderClear( renderer );
 
     samus.draw();
