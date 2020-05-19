@@ -1,7 +1,6 @@
-# g++ -o bin/main.out main.cpp `sdl2-config --cflags --libs` && ./bin/main.out
 
 all:
-	g++ -o bin/main.out src/main.cpp `sdl2-config --cflags --libs`
+	gcc -o bin/main.out src/main.c `sdl2-config --cflags --libs`
 
 run: all
 	./bin/main.out
