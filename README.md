@@ -33,6 +33,6 @@ sudo make install
 cd sdl-basic/
 mkdir bin
 emacs basic.cpp
-g++ -o bin/basic.out basic.cpp `sdl2-config --cflags --libs`
-./bin/basic.out 
+make
+make run
 ```
