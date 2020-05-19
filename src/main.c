@@ -5,6 +5,13 @@
 #define SCREEN_H 288
 #define SPRITE_SCALE 4
 
+struct Sprite {
+  // location and size in sprite sheet
+  SDL_Rect clip;
+  // drawing location and size
+  SDL_Rect draw;
+};
+
 SDL_Window *window;
 SDL_Renderer *renderer;
 SDL_Texture *texture;
@@ -52,22 +59,26 @@ int teardown()
 
 // load sprite from sheet at cx, cy
 // render sprite at x,y
-int sprite(int x, int y, int cx, int cy, int w, int h)
+int draw_sprite(int x, int y, int cx, int cy, int w, int h)
 {
   
   SDL_Surface *surface;
-  SDL_Rect clip = {cx, cy, w, h};
+
+  struct Sprite sprite = {
+			  // clip
+			  {cx, cy, w, h},
+			  // draw
+			  {x, y, w, h}
+  };
 
   // scale sprite
-  w *= SPRITE_SCALE;
-  h *= SPRITE_SCALE;
+  sprite.draw.w *= SPRITE_SCALE;
+  sprite.draw.h *= SPRITE_SCALE;
 
   // center if -1
-  if (x < 0){ x = (SCREEN_W-w)/2; };
-  if (y < 0){ y = (SCREEN_H-h)/2; };
+  if (x < 0){ sprite.draw.x = (SCREEN_W-sprite.draw.w)/2; };
+  if (y < 0){ sprite.draw.y = (SCREEN_H-sprite.draw.h)/2; };
   
-  SDL_Rect draw = {x, y, w, h};
-
   surface = SDL_LoadBMP("data/metroid.bmp");
 
   if (surface == NULL) {
@@ -89,7 +100,7 @@ int sprite(int x, int y, int cx, int cy, int w, int h)
 
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(renderer);
-  SDL_RenderCopy(renderer, texture, &clip, &draw);
+  SDL_RenderCopy(renderer, texture, &sprite.clip, &sprite.draw);
   
   return 0;
 }
@@ -105,10 +116,16 @@ int main(int argc, char* argv[])
       case SDL_QUIT:
 	quit = 1;
 	break;
+      case SDL_CONTROLLERBUTTONDOWN:
+	switch (event.cbutton.button) {
+	case SDL_CONTROLLER_BUTTON_DPAD_UP:
+	  SDL_Log("Controller up!\n");
+	  break;
+	}	
       }
     }
     // draw
-    sprite(-1, -1, 128, 121, 16, 32);
+    draw_sprite(-1, -1, 128, 121, 16, 32);
     // render
     SDL_RenderPresent(renderer);
     //wait
