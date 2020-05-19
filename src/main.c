@@ -17,6 +17,27 @@ SDL_Renderer *renderer;
 SDL_Texture *texture;
 SDL_Event event;
 
+int controller_info()
+{
+  // https://wiki.libsdl.org/SDL_GameControllerMapping
+  SDL_GameController *ctrl;
+  int i;
+
+  for (i = 0; i < SDL_NumJoysticks(); ++i) {
+    if (SDL_IsGameController(i)) {
+      char *mapping;
+      SDL_Log("Index \'%i\' is a compatible controller, named \'%s\'", i, SDL_GameControllerNameForIndex(i));
+      ctrl = SDL_GameControllerOpen(i);
+      mapping = SDL_GameControllerMapping(ctrl);
+      SDL_Log("Controller %i is mapped as \"%s\".", i, mapping);
+      SDL_free(mapping);
+    } else {
+      SDL_Log("Index \'%i\' is not a compatible controller.", i);
+    }
+  }
+  return 0;
+}
+
 int setup()
 {
   if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER) != 0) {
@@ -43,7 +64,10 @@ int setup()
     SDL_Log("Unable to create renderer: %s", SDL_GetError());
     return 1;
   }
- 
+
+  // show controller info
+  controller_info();
+  
   return 0;
 }
 
@@ -110,6 +134,9 @@ int main(int argc, char* argv[])
 
   int quit = 0;
 
+  int sx = 0;
+  int sy=0;
+  
   while (!quit) {
     while(SDL_PollEvent(&event)) {
       switch (event.type) {
@@ -118,14 +145,26 @@ int main(int argc, char* argv[])
 	break;
       case SDL_CONTROLLERBUTTONDOWN:
 	switch (event.cbutton.button) {
+	case SDL_CONTROLLER_BUTTON_BACK:
+          quit = 1;
+          break;
 	case SDL_CONTROLLER_BUTTON_DPAD_UP:
-	  SDL_Log("Controller up!\n");
+	  sy -= 1;
+	  break;
+	case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+	  sy += 1;
+	  break;
+	case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+	  sx -= 1;
+	  break;
+	case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+	  sx += 1;
 	  break;
 	}	
       }
     }
     // draw
-    draw_sprite(-1, -1, 128, 121, 16, 32);
+    draw_sprite(sx, sy, 128, 121, 16, 32);
     // render
     SDL_RenderPresent(renderer);
     //wait
