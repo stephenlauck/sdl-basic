@@ -1,9 +1,11 @@
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
+#include "SDL2/SDL_image.h"
 
 // 16:9 * 32 pixels
 #define SCREEN_W 512
 #define SCREEN_H 288
 #define SPRITE_SCALE 4
+#define ACCELERATION 10
 
 struct Sprite {
   // location and size in sprite sheet
@@ -17,8 +19,32 @@ SDL_Renderer *renderer;
 SDL_Texture *texture;
 SDL_Event event;
 
-int controller_info()
+int system_info()
 {
+  // SDL Version
+  SDL_version compiled;
+  SDL_version linked;
+
+  SDL_VERSION(&compiled);
+  SDL_GetVersion(&linked);
+  printf("We compiled against SDL version %d.%d.%d ...\n",
+	 compiled.major, compiled.minor, compiled.patch);
+  printf("But we are linking against SDL version %d.%d.%d.\n\n",
+	 linked.major, linked.minor, linked.patch);
+
+  // SDL_image Info
+  SDL_version compile_version;
+  const SDL_version *link_version=IMG_Linked_Version();
+  SDL_IMAGE_VERSION(&compile_version);
+  printf("compiled with SDL_image version: %d.%d.%d\n", 
+	 compile_version.major,
+	 compile_version.minor,
+	 compile_version.patch);
+  printf("running with SDL_image version: %d.%d.%d\n\n", 
+	 link_version->major,
+	 link_version->minor,
+	 link_version->patch);
+
   // https://wiki.libsdl.org/SDL_GameControllerMapping
   SDL_GameController *ctrl;
   int i;
@@ -42,8 +68,19 @@ int setup()
 {
   if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER) != 0) {
     SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+    return 1;
   }
+  	
+  // load support for PNG image formats
+  int flags=IMG_INIT_PNG;
+  int initted=IMG_Init(flags);
+  if((initted&flags) != flags) {
+    printf("IMG_Init: Failed to init required jpg and png support!\n");
+    printf("IMG_Init: %s\n", IMG_GetError());
 
+    return 1;
+  }
+  
   window = SDL_CreateWindow(
 			    "Basic",
 			    SDL_WINDOWPOS_CENTERED,
@@ -65,8 +102,8 @@ int setup()
     return 1;
   }
 
-  // show controller info
-  controller_info();
+  // show system info
+  system_info();
   
   return 0;
 }
@@ -103,10 +140,10 @@ int draw_sprite(int x, int y, int cx, int cy, int w, int h)
   if (x < 0){ sprite.draw.x = (SCREEN_W-sprite.draw.w)/2; };
   if (y < 0){ sprite.draw.y = (SCREEN_H-sprite.draw.h)/2; };
   
-  surface = SDL_LoadBMP("data/metroid.bmp");
+  surface = IMG_Load("data/metroid.png");
 
   if (surface == NULL) {
-    SDL_Log("Unable to load BMP: %s", SDL_GetError());
+    SDL_Log("Unable to load PNG: %s", SDL_GetError());
     return 1;
   }
 
@@ -149,16 +186,16 @@ int main(int argc, char* argv[])
           quit = 1;
           break;
 	case SDL_CONTROLLER_BUTTON_DPAD_UP:
-	  sy -= 1;
+	  sy -= ACCELERATION;
 	  break;
 	case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-	  sy += 1;
+	  sy += ACCELERATION;
 	  break;
 	case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-	  sx -= 1;
+	  sx -= ACCELERATION;
 	  break;
 	case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-	  sx += 1;
+	  sx += ACCELERATION;
 	  break;
 	}	
       }
