@@ -2,10 +2,10 @@
 #include "SDL2/SDL_image.h"
 
 // 16:9 * 32 pixels
-#define SCREEN_W 512
-#define SCREEN_H 288
+#define SCREEN_W 640
+#define SCREEN_H 480
 #define SPRITE_SCALE 4
-#define ACCELERATION 10
+#define VELOCITY 10
 
 struct Sprite {
   // location and size in sprite sheet
@@ -113,6 +113,7 @@ int teardown()
   SDL_DestroyTexture(texture);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
+  IMG_Quit();
   SDL_Quit();
 
   return 0;
@@ -172,7 +173,9 @@ int main(int argc, char* argv[])
   int quit = 0;
 
   int sx = 0;
-  int sy=0;
+  int sy = 0;
+  int vx = 0;
+  int vy = 0;
   
   while (!quit) {
     while(SDL_PollEvent(&event)) {
@@ -186,19 +189,45 @@ int main(int argc, char* argv[])
           quit = 1;
           break;
 	case SDL_CONTROLLER_BUTTON_DPAD_UP:
-	  sy -= ACCELERATION;
+	  vy -= VELOCITY;
 	  break;
 	case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-	  sy += ACCELERATION;
+	  vy += VELOCITY;
 	  break;
 	case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-	  sx -= ACCELERATION;
+	  vx -= VELOCITY;
 	  break;
 	case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-	  sx += ACCELERATION;
+	  vx += VELOCITY;
 	  break;
-	}	
+	}
+      case SDL_CONTROLLERBUTTONUP:
+	switch (event.cbutton.button) {
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+          vy += VELOCITY;
+          break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+          vy -= VELOCITY;
+          break;
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+          vx += VELOCITY;
+          break;
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+          vx -= VELOCITY;
+          break;
+
+	}
       }
+    }
+    // move
+    sy += vy;
+    sx += vx;
+    // bounds
+    if( (sy < 0) || (sy + 32 > SCREEN_H)) {
+      sy = SCREEN_H - 32;
+    }
+    if( (sx < 0) || (sx + 16 > SCREEN_W)) {
+      sy = SCREEN_W - 16;
     }
     // draw
     draw_sprite(sx, sy, 128, 121, 16, 32);
